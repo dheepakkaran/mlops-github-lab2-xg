@@ -2,9 +2,16 @@ import argparse
 import json
 
 import joblib
+import numpy as np
 from sklearn.metrics import brier_score_loss, f1_score, log_loss, roc_auc_score
 
 from data_utils import FEATURES, METRICS_DIR, TARGET, load_splits, model_path
+
+
+def tune_threshold(y, p):
+    thresholds = np.round(np.arange(0.05, 0.96, 0.01), 2)
+    scores = [f1_score(y, (p >= t).astype(int), zero_division=0) for t in thresholds]
+    return float(thresholds[int(np.argmax(scores))])
 
 
 def main():
@@ -13,17 +20,21 @@ def main():
     parser.add_argument("--calibrated", action="store_true")
     args = parser.parse_args()
 
-    _, _, test = load_splits()
+    _, calib, test = load_splits()
     model = joblib.load(model_path(args.version, args.calibrated))
+    threshold = tune_threshold(calib[TARGET], model.predict_proba(calib[FEATURES])[:, 1])
+
     y = test[TARGET]
     p = model.predict_proba(test[FEATURES])[:, 1]
-
     sb = test.dropna(subset=["statsbomb_xg"])
+
     metrics = {
         "version": args.version,
         "calibrated": args.calibrated,
         "n_test_shots": len(test),
-        "f1": round(f1_score(y, (p >= 0.5).astype(int)), 4),
+        "f1": round(f1_score(y, (p >= 0.5).astype(int), zero_division=0), 4),
+        "tuned_threshold": threshold,
+        "f1_tuned": round(f1_score(y, (p >= threshold).astype(int), zero_division=0), 4),
         "roc_auc": round(roc_auc_score(y, p), 4),
         "brier": round(brier_score_loss(y, p), 4),
         "log_loss": round(log_loss(y, p), 4),
