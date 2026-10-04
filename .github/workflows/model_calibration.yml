@@ -37,11 +37,14 @@ jobs:
       - name: Evaluate calibrated model
         run: python src/evaluate_model.py --version "$VERSION" --calibrated
 
-      - name: Commit and push calibrated model
+      - name: Build report (calibration curve, shot map, run summary)
+        run: python src/report.py --version "$VERSION"
+
+      - name: Commit and push calibrated model + report
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add models/ metrics/
+          git add models/ metrics/ reports/
           git commit -m "ci: calibrate xG model $VERSION"
           git pull --rebase
           git push
