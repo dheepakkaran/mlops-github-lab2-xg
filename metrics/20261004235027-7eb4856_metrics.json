@@ -1,0 +1,14 @@
+{
+  "version": "20261004235027-7eb4856",
+  "calibrated": false,
+  "n_test_shots": 547,
+  "f1": 0.4125,
+  "tuned_threshold": 0.63,
+  "f1_tuned": 0.3604,
+  "roc_auc": 0.8006,
+  "brier": 0.1253,
+  "log_loss": 0.4016,
+  "mean_predicted_xg": 0.2939,
+  "actual_goal_rate": 0.0914,
+  "statsbomb_xg_brier": 0.0646
+}
